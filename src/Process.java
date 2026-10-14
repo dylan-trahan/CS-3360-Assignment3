@@ -11,4 +11,8 @@ public class Process {
         return "[service=" + service_time + ", arrival=" + arrival_time + "]";
     }
 
+    public boolean equals(Process p){
+        return p.id == this.id;
+    }
+
 }
