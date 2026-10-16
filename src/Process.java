@@ -8,7 +8,7 @@ public class Process {
 
     @Override
     public String toString(){
-        return "[service=" + service_time + ", arrival=" + arrival_time + "]";
+        return "[id=" + id + ", service=" + service_time + ", arrival=" + arrival_time + ", remaining=" + remaining_service_time + ", start=" + start_time +"]";
     }
 
     public boolean equals(Process p){

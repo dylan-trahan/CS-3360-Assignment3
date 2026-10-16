@@ -1,4 +1,6 @@
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
@@ -11,32 +13,13 @@ public class Main {
         return -Math.log(1-u) / rate;
     }
 
-    public static Stats fcfs(final int process_count){
+    public static Stats fcfs(Queue<Event> eq){
 
         Stats out = new Stats();
 
-        Comparator<Event> ec = (e1, e2) -> {
-            return (int)Math.signum(e1.time - e2.time);
-        };
-
-        PriorityQueue<Event> eq = new PriorityQueue<>(ec);
         Queue<Process> rq = new LinkedList<>();
-        double aTime = 0.0;
-        double test = 0.0;
-        for(int i=0;i<process_count;i++){
-            Process p = new Process();
-            p.id = i+1;
-            double interTime = randExponential(2);
-            p.arrival_time = aTime + interTime;
-            aTime += interTime;
-            p.service_time = randExponential(1);
-            test += p.service_time;
-            p.remaining_service_time = p.service_time;
-            Event e = new Event(EventType.ARR, p.arrival_time, p);
-            eq.add(e);
-        }
 
-        System.out.println("TOTAL TIME: " + test);
+        final int processCount = eq.size();
 
         double timePtr = 0.0;
         double idle_time = 0.0;
@@ -61,11 +44,6 @@ public class Main {
                 }
             }
             else{
-                if(pRunning == null){
-                    // This should never happen, but worth troubleshooting
-                    System.out.println("what?");
-                    continue;
-                }
                 pRunning.completion_time = timePtr;
                 out.avg_turnaround_time += pRunning.completion_time - pRunning.arrival_time;
                 out.avg_waiting_time += pRunning.completion_time - pRunning.arrival_time - pRunning.service_time;
@@ -83,47 +61,29 @@ public class Main {
 
         out.completion_time = timePtr;
         out.utilization = (timePtr - idle_time) * 100.0 / timePtr;
-        out.throughput = process_count / timePtr;
+        out.throughput = processCount / timePtr;
         out.avg_ready_queue_length /= out.completion_time;
-        out.avg_response_time /= (double)process_count;
-        out.avg_turnaround_time /= (double)process_count;
-        out.avg_waiting_time /= (double)process_count;
+        out.avg_response_time /= (double)processCount;
+        out.avg_turnaround_time /= (double)processCount;
+        out.avg_waiting_time /= (double)processCount;
 
         return out;
     }
 
 
 
-    public static Stats sjf(final int process_count){
+    public static Stats sjf(Queue<Event> eq){
 
         Stats out = new Stats();
 
-        Comparator<Event> ec = (e1, e2) -> {
-            return (int)Math.signum(e1.time - e2.time);
-        };
-
         Comparator<Process> pc = (p1, p2) -> {
+            if(p1.service_time == p2.service_time) return p1.id - p2.id;
             return (int)Math.signum(p1.service_time - p2.service_time);
         };
 
-        PriorityQueue<Event> eq = new PriorityQueue<>(ec);
         Queue<Process> rq = new PriorityQueue<>(pc);
-        double aTime = 0.0;
-        double test = 0.0;
-        for(int i=0;i<process_count;i++){
-            Process p = new Process();
-            p.id = i+1;
-            double interTime = randExponential(2);
-            p.arrival_time = aTime + interTime;
-            aTime += interTime;
-            p.service_time = randExponential(1);
-            test += p.service_time;
-            p.remaining_service_time = p.service_time;
-            Event e = new Event(EventType.ARR, p.arrival_time, p);
-            eq.add(e);
-        }
 
-        System.out.println("TOTAL TIME: " + test);
+        final int processCount = eq.size();
 
         double timePtr = 0.0;
         double idle_time = 0.0;
@@ -148,11 +108,6 @@ public class Main {
                 }
             }
             else{
-                if(pRunning == null){
-                    // This should never happen, but worth troubleshooting
-                    System.out.println("what?");
-                    continue;
-                }
                 pRunning.completion_time = timePtr;
                 out.avg_turnaround_time += pRunning.completion_time - pRunning.arrival_time;
                 out.avg_waiting_time += pRunning.completion_time - pRunning.arrival_time - pRunning.service_time;
@@ -170,48 +125,29 @@ public class Main {
 
         out.completion_time = timePtr;
         out.utilization = (timePtr - idle_time) * 100.0 / timePtr;
-        out.throughput = process_count / timePtr;
+        out.throughput = processCount / timePtr;
         out.avg_ready_queue_length /= out.completion_time;
-        out.avg_response_time /= (double)process_count;
-        out.avg_turnaround_time /= (double)process_count;
-        out.avg_waiting_time /= (double)process_count;
+        out.avg_response_time /= (double)processCount;
+        out.avg_turnaround_time /= (double)processCount;
+        out.avg_waiting_time /= (double)processCount;
 
         return out;
     }
 
 
 
-    public static Stats srtf(final int process_count){
+    public static Stats srtf(Queue<Event> eq){
 
         Stats out = new Stats();
 
-        Comparator<Event> ec = (e1, e2) -> {
-            return (int)Math.signum(e1.time - e2.time);
-        };
-
         Comparator<Process> pc = (p1, p2) -> {
+            if(p1.remaining_service_time == p2.remaining_service_time) return p1.id - p2.id;
             return (int)Math.signum(p1.remaining_service_time - p2.remaining_service_time);
         };
 
-        PriorityQueue<Event> eq = new PriorityQueue<>(ec);
         Queue<Process> rq = new PriorityQueue<>(pc);
-        double aTime = 0.0;
-        double test = 0.0;
-        for(int i=0;i<process_count;i++){
-            Process p = new Process();
-            p.id = i+1;
-            double interTime = randExponential(2);
-            p.arrival_time = aTime + interTime;
-            aTime += interTime;
-            p.service_time = randExponential(1);
-            test += p.service_time;
-            p.start_time = -1.0; // Negative if process hasn't started, used for preemption
-            p.remaining_service_time = p.service_time;
-            Event e = new Event(EventType.ARR, p.arrival_time, p);
-            eq.add(e);
-        }
 
-        System.out.println("TOTAL TIME: " + test);
+        final int processCount = eq.size();
 
         double timePtr = 0.0;
         double idle_time = 0.0;
@@ -255,11 +191,6 @@ public class Main {
                 }
             }
             else{
-                if(pRunning == null){
-                    // This should never happen, but worth troubleshooting
-                    System.out.println("what?");
-                    continue;
-                }
                 pRunning.completion_time = timePtr;
                 out.avg_turnaround_time += pRunning.completion_time - pRunning.arrival_time;
                 out.avg_waiting_time += pRunning.completion_time - pRunning.arrival_time - pRunning.service_time;
@@ -277,42 +208,22 @@ public class Main {
 
         out.completion_time = timePtr;
         out.utilization = (timePtr - idle_time) * 100.0 / timePtr;
-        out.throughput = process_count / timePtr;
+        out.throughput = processCount / timePtr;
         out.avg_ready_queue_length /= out.completion_time;
-        out.avg_response_time /= (double)process_count;
-        out.avg_turnaround_time /= (double)process_count;
-        out.avg_waiting_time /= (double)process_count;
+        out.avg_response_time /= (double)processCount;
+        out.avg_turnaround_time /= (double)processCount;
+        out.avg_waiting_time /= (double)processCount;
 
         return out;
     }
 
-    public static Stats rr(final int process_count, final double quantum){
+    public static Stats rr(Queue<Event> eq, final double quantum){
 
         Stats out = new Stats();
 
-        Comparator<Event> ec = (e1, e2) -> {
-            return (int)Math.signum(e1.time - e2.time);
-        };
-
-        PriorityQueue<Event> eq = new PriorityQueue<>(ec);
         Queue<Process> rq = new LinkedList<>();
-        double aTime = 0.0;
-        double test = 0.0;
-        for(int i=0;i<process_count;i++){
-            Process p = new Process();
-            p.id = i+1;
-            double interTime = randExponential(2);
-            p.arrival_time = aTime + interTime;
-            aTime += interTime;
-            p.service_time = randExponential(1);
-            test += p.service_time;
-            p.start_time = -1.0;
-            p.remaining_service_time = p.service_time;
-            Event e = new Event(EventType.ARR, p.arrival_time, p);
-            eq.add(e);
-        }
 
-        System.out.println("TOTAL TIME: " + test);
+        final int processCount = eq.size();
 
         double timePtr = 0.0;
         double idle_time = 0.0;
@@ -333,17 +244,13 @@ public class Main {
                     if(pRunning.remaining_service_time < quantum){
                         eq.add(new Event(EventType.DEP, timePtr + pRunning.remaining_service_time, pRunning));
                     }
-                    else eq.add(new Event(EventType.QUANTUM_EXPIRE, timePtr + quantum, null));
+                    else eq.add(new Event(EventType.QUANTUM_EXPIRE, timePtr + quantum, pRunning));
                 }
                 else{
                     rq.add(next.process);
                 }
             }
             else if(next.type == EventType.DEP){
-                if(pRunning == null){
-                    // This should never happen, but worth troubleshooting
-                    continue;
-                }
                 pRunning.completion_time = timePtr;
                 out.avg_turnaround_time += pRunning.completion_time - pRunning.arrival_time;
                 out.avg_waiting_time += pRunning.completion_time - pRunning.arrival_time - pRunning.service_time;
@@ -356,7 +263,7 @@ public class Main {
                     if(pRunning.remaining_service_time < quantum){
                         eq.add(new Event(EventType.DEP, timePtr + pRunning.remaining_service_time, pRunning));
                     }
-                    else eq.add(new Event(EventType.QUANTUM_EXPIRE, timePtr + quantum, null));
+                    else eq.add(new Event(EventType.QUANTUM_EXPIRE, timePtr + quantum, pRunning));
                 }
             }
             else{
@@ -371,47 +278,28 @@ public class Main {
                 if(pRunning.remaining_service_time < quantum){
                     eq.add(new Event(EventType.DEP, timePtr + pRunning.remaining_service_time, pRunning));
                 }
-                else eq.add(new Event(EventType.QUANTUM_EXPIRE, timePtr + quantum, null));
+                else eq.add(new Event(EventType.QUANTUM_EXPIRE, timePtr + quantum, pRunning));
             }
         }
 
         out.completion_time = timePtr;
         out.utilization = (timePtr - idle_time) * 100.0 / timePtr;
-        out.throughput = process_count / timePtr;
+        out.throughput = processCount / timePtr;
         out.avg_ready_queue_length /= out.completion_time;
-        out.avg_response_time /= (double)process_count;
-        out.avg_turnaround_time /= (double)process_count;
-        out.avg_waiting_time /= (double)process_count;
+        out.avg_response_time /= (double)processCount;
+        out.avg_turnaround_time /= (double)processCount;
+        out.avg_waiting_time /= (double)processCount;
 
         return out;
     }
 
-    public static Stats hrrn(final int process_count){
+    public static Stats hrrn(Queue<Event> eq){
 
         Stats out = new Stats();
 
-        Comparator<Event> ec = (e1, e2) -> {
-            return (int)Math.signum(e1.time - e2.time);
-        };
-
-        PriorityQueue<Event> eq = new PriorityQueue<>(ec);
         Queue<Process> rq = new LinkedList<>();
-        double aTime = 0.0;
-        double test = 0.0;
-        for(int i=0;i<process_count;i++){
-            Process p = new Process();
-            p.id = i+1;
-            double interTime = randExponential(2);
-            p.arrival_time = aTime + interTime;
-            aTime += interTime;
-            p.service_time = randExponential(1);
-            test += p.service_time;
-            p.remaining_service_time = p.service_time;
-            Event e = new Event(EventType.ARR, p.arrival_time, p);
-            eq.add(e);
-        }
 
-        System.out.println("TOTAL TIME: " + test);
+        final int processCount = eq.size();
 
         double timePtr = 0.0;
         double idle_time = 0.0;
@@ -436,11 +324,6 @@ public class Main {
                 }
             }
             else{
-                if(pRunning == null){
-                    // This should never happen, but worth troubleshooting
-                    System.out.println("what?");
-                    continue;
-                }
                 pRunning.completion_time = timePtr;
                 out.avg_turnaround_time += pRunning.completion_time - pRunning.arrival_time;
                 out.avg_waiting_time += pRunning.completion_time - pRunning.arrival_time - pRunning.service_time;
@@ -448,7 +331,16 @@ public class Main {
 
                 if(rq.isEmpty()) pRunning = null;
                 else{
-                    pRunning = rq.remove();
+                    // There's probably a more elegant/efficient way of doing this.
+                    // I can't think of it right now.
+                    Process hrr = rq.peek();
+                    for(Process p : rq){
+                        double ratio1 = ((timePtr - p.arrival_time) + p.service_time) / p.service_time;
+                        double ratio2 = ((timePtr - hrr.arrival_time) + hrr.service_time) / hrr.service_time;
+                        if(ratio1 > ratio2) hrr = p;
+                    }
+                    rq.remove(hrr);
+                    pRunning = hrr;
                     pRunning.start_time = timePtr;
                     Event dep = new Event(EventType.DEP, timePtr + pRunning.remaining_service_time, pRunning);
                     eq.add(dep);
@@ -458,20 +350,105 @@ public class Main {
 
         out.completion_time = timePtr;
         out.utilization = (timePtr - idle_time) * 100.0 / timePtr;
-        out.throughput = process_count / timePtr;
+        out.throughput = processCount / timePtr;
         out.avg_ready_queue_length /= out.completion_time;
-        out.avg_response_time /= (double)process_count;
-        out.avg_turnaround_time /= (double)process_count;
-        out.avg_waiting_time /= (double)process_count;
+        out.avg_response_time /= (double)processCount;
+        out.avg_turnaround_time /= (double)processCount;
+        out.avg_waiting_time /= (double)processCount;
 
         return out;
     }
 
     public static void main(String[] args) {
         final int PROCESS_COUNT = 1000;
-        fcfs(PROCESS_COUNT).print();
-        sjf(PROCESS_COUNT).print();
-        srtf(PROCESS_COUNT).print();
-        rr(PROCESS_COUNT, 2.0).print();
+
+        // Create comparator to time-sort event queue
+        Comparator<Event> ec = (e1, e2) -> {
+            return (int)Math.signum(e1.time - e2.time);
+        };
+
+        PriorityQueue<Event> eq = new PriorityQueue<>(ec);
+        double aTime = 0.0;
+
+        // Create arrival events to be used in simulations
+        for(int i=0;i<PROCESS_COUNT;i++){
+            Process p = new Process();
+            p.id = i+1;
+            double interTime = randExponential(2);
+            p.arrival_time = aTime + interTime;
+            aTime += interTime;
+            p.service_time = randExponential(1);
+            p.start_time = -1.0;
+            p.remaining_service_time = p.service_time;
+            Event e = new Event(EventType.ARR, p.arrival_time, p);
+            eq.add(e);
+        }
+
+        PriorityQueue<Event> eqCopy;
+
+        Stats[] statsArr = new Stats[5];
+
+        // Event queue must be deep copied each time since it is passed by reference
+        eqCopy = new PriorityQueue<>(ec);
+        for(Event e : eq) eqCopy.add(e.copy());
+        statsArr[0] = fcfs(eqCopy);
+
+        eqCopy = new PriorityQueue<>(ec);
+        for(Event e : eq) eqCopy.add(e.copy());
+        statsArr[1] = sjf(eqCopy);
+
+        eqCopy = new PriorityQueue<>(ec);
+        for(Event e : eq) eqCopy.add(e.copy());
+        statsArr[2] = srtf(eqCopy);
+
+        eqCopy = new PriorityQueue<>(ec);
+        for(Event e : eq) eqCopy.add(e.copy());
+        statsArr[3] = rr(eqCopy, 2.0);
+
+        eqCopy = new PriorityQueue<>(ec);
+        for(Event e : eq) eqCopy.add(e.copy());
+        statsArr[4] = hrrn(eqCopy);
+
+        try{
+            FileWriter writer = new FileWriter("output.md");
+            writer.write("### CS 3360 Assignment 3 Performance Summary (1000 Processes)\n\n\n");
+            writer.write("| Metric | FCFS | SJF | SRTF | RR (q=2.0) | HRRN |\n");
+            writer.write("| :--- | :---: | :---: | :---: | :---: | :---: |\n");
+
+            writer.write("| Total Completion Time (ms) |");
+            for(Stats s : statsArr) writer.write(String.format("%.3f|", s.completion_time));
+            writer.write("\n");
+
+            writer.write("| Average Turnaround Time (ms) |");
+            for(Stats s : statsArr) writer.write(String.format("%.3f|", s.avg_turnaround_time));
+            writer.write("\n");
+
+            writer.write("| Average Waiting Time (ms) |");
+            for(Stats s : statsArr) writer.write(String.format("%.3f|", s.avg_waiting_time));
+            writer.write("\n");
+
+            writer.write("| Average Response Time (ms) |");
+            for(Stats s : statsArr) writer.write(String.format("%.3f|", s.avg_response_time));
+            writer.write("\n");
+
+            writer.write("| CPU Utilization (%) |");
+            for(Stats s : statsArr) writer.write(String.format("%.2f|", s.utilization));
+            writer.write("\n");
+
+            writer.write("| System Throughput (proc/s) |");
+            for(Stats s : statsArr) writer.write(String.format("%.2f|", s.throughput));
+            writer.write("\n");
+
+            writer.write("| Avg. Ready Queue Length |");
+            for(Stats s : statsArr) writer.write(String.format("%.2f|", s.avg_ready_queue_length));
+            writer.write("\n");
+
+            writer.flush();
+            writer.close();
+
+            System.out.println("Output saved to output.md");
+        } catch(IOException e){
+            e.printStackTrace();
+        }
     }
 }
